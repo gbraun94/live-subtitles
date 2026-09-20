@@ -1,11 +1,11 @@
 // Service Worker for Live Subtitles PWA
-const CACHE_NAME = 'live-subtitles-v1';
+const CACHE_NAME = 'live-subtitles-v2';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (e) => {
@@ -29,12 +29,10 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Only cache local GET requests; bypass for WebSocket or external APIs
   if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) {
     return;
   }
 
-  // Network first with cache fallback
   e.respondWith(
     fetch(e.request)
       .then((res) => {
