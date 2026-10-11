@@ -1,7 +1,7 @@
 {
-  "name": "Live Subtitles - Chinese to English",
+  "name": "Live Bilingual Subtitles",
   "short_name": "LiveSubtitles",
-  "description": "Real-time Chinese to English speech translation subtitles powered by Gemini Live",
+  "description": "Real-time bilingual Chinese and English speech translation subtitles powered by Gemini Live",
   "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",

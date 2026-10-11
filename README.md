@@ -1,6 +1,6 @@
-# 🎙️ Live Chinese to English Subtitles (PWA)
+# 🎙️ Live Bilingual Subtitles (Chinese ⇄ English PWA)
 
-A real-time, low-latency Chinese to English speech-to-text translation application powered by **Google Gemini Live API** (`gemini-3.5-live-translate-preview`).
+A real-time, low-latency Chinese ⇄ English speech-to-text translation application powered by **Google Gemini Live API** (`gemini-3.5-live-translate-preview`).
 
 ---
 
@@ -12,7 +12,9 @@ A real-time, low-latency Chinese to English speech-to-text translation applicati
 
 ## ✨ Features
 
-- **Natural Flowing Sentences**: Continuous sentence joiner formats speech into complete, readable English paragraphs instead of fragmented word bubbles.
+- **Instant Language Swap**: One-tap swap button toggles instantly between **Chinese ➔ English** and **English ➔ Chinese** (supports live on-the-fly switching while listening).
+- **Chinese Script Options**: Supports both Simplified (`zh-Hans`) and Traditional (`zh-Hant`) Chinese when translating from English.
+- **Natural Flowing Sentences**: Continuous sentence joiner formats speech into complete, readable paragraphs with punctuation and overlap deduplication (customized for both English and CJK typography).
 - **Progressive Web App (PWA)**: Installable directly to phone home screen with dedicated app icon and full-screen native view.
 - **Silent Subtitle Mode**: Dedicated to reading subtitles live on screen without audio feedback.
 - **Adjustable Text Size**: `A-` and `A+` controls to enlarge subtitles for comfortable viewing.

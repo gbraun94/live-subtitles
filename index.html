@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Live Chinese to English Subtitles</title>
+  <title>Live Bilingual Subtitles (Chinese ⇄ English)</title>
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#0f172a">
   <meta name="mobile-web-app-capable" content="yes">
@@ -214,17 +214,75 @@
     .lang-direction {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       font-size: 0.95rem;
       font-weight: 700;
+      user-select: none;
     }
 
-    .lang-direction .flag {
-      font-size: 1.2rem;
+    .lang-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--surface-border);
+      transition: all 0.25s ease;
     }
 
-    .lang-direction .arrow {
-      color: var(--text-subtle);
+    .lang-tag.target-tag {
+      background: rgba(59, 130, 246, 0.12);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+    }
+
+    .lang-tag.target-tag.chinese-active {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fcd34d;
+    }
+
+    .lang-tag .flag {
+      font-size: 1.25rem;
+    }
+
+    .swap-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--surface-hover);
+      border: 1px solid var(--surface-border);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      flex-shrink: 0;
+    }
+
+    .swap-btn:hover {
+      background: #232938;
+      border-color: var(--primary);
+      color: #60a5fa;
+      transform: scale(1.1);
+    }
+
+    .swap-btn:active {
+      transform: scale(0.92);
+    }
+
+    .swap-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+      transition: transform 0.35s ease;
+    }
+
+    .swap-btn.swapped svg {
+      transform: rotate(180deg);
     }
 
     .mic-button {
@@ -320,6 +378,11 @@
       min-height: 480px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
       overflow: hidden;
+      transition: border-color 0.3s ease;
+    }
+
+    .card-english.target-chinese {
+      border-color: rgba(245, 158, 11, 0.45);
     }
 
     /* Hide Chinese box per user requirement */
@@ -393,6 +456,13 @@
       padding: 14px 18px;
       animation: fadeIn 0.25s ease-out;
       word-break: break-word;
+      transition: border-color 0.3s ease;
+    }
+
+    .english-paragraph.target-chinese {
+      border-left-color: #f59e0b;
+      letter-spacing: 0.03em;
+      line-height: 1.85;
     }
 
     .english-paragraph .para-time {
@@ -513,7 +583,7 @@
       </div>
       <div>
         <div class="app-title">Live Subtitles</div>
-        <div style="font-size:0.72rem;color:var(--text-subtle);">Chinese ➔ English</div>
+        <div id="headerSubTitle" style="font-size:0.72rem;color:var(--text-subtle);">Chinese ➔ English</div>
       </div>
     </div>
 
@@ -528,7 +598,7 @@
       </button>
 
       <button class="icon-btn" id="openSettingsBtn" title="Settings">
-        ⚙️ Key
+        ⚙️ Settings
       </button>
     </div>
   </header>
@@ -545,12 +615,20 @@
 
     <!-- Primary Controls -->
     <div class="action-panel">
-      <div class="lang-direction">
-        <span class="flag">🇨🇳</span>
-        <span>Chinese</span>
-        <span class="arrow">➔</span>
-        <span class="flag">🇺🇸</span>
-        <span style="color:#60a5fa;">English</span>
+      <div class="lang-direction" id="langDirection">
+        <div class="lang-tag source-tag" id="sourceTag">
+          <span class="flag" id="sourceFlag">🇨🇳</span>
+          <span id="sourceLangName">Chinese</span>
+        </div>
+
+        <button class="swap-btn" id="swapLangBtn" title="Swap languages (Chinese ⇄ English)" aria-label="Swap language direction">
+          <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+        </button>
+
+        <div class="lang-tag target-tag" id="targetTag">
+          <span class="flag" id="targetFlag">🇺🇸</span>
+          <span id="targetLangName">English</span>
+        </div>
       </div>
 
       <div style="display:flex;align-items:center;gap:12px;">
@@ -579,13 +657,13 @@
 
     <!-- Live Subtitles View -->
     <div class="stream-container">
-      <!-- English Translation (Full Focus View) -->
-      <div class="card-english">
+      <!-- Target Translation (Full Focus View) -->
+      <div class="card-english" id="subtitleCard">
         <div class="card-header">
           <div class="card-title">
-            <span>🇺🇸</span>
-            <span>Live English Subtitles</span>
-            <span class="card-badge badge-en">Live Translation</span>
+            <span id="cardTargetFlag">🇺🇸</span>
+            <span id="cardTitleText">Live English Subtitles</span>
+            <span class="card-badge badge-en" id="cardBadge">Live Translation</span>
           </div>
           <div style="display:flex; align-items:center; gap:6px;">
             <button class="icon-btn" id="fontDecBtn" style="padding:4px 8px;font-size:0.75rem;font-weight:700;" title="Smaller text">A-</button>
@@ -601,22 +679,37 @@
         </div>
       </div>
 
-      <!-- Chinese Transcription (Hidden per user request) -->
+      <!-- Spoken Audio Transcription (Hidden per user request) -->
       <div class="card-chinese" style="display:none;" aria-hidden="true">
         <div class="card-body" id="chineseBody"></div>
       </div>
     </div>
   </main>
 
-  <!-- Key Modal -->
+  <!-- Key & Settings Modal -->
   <div class="modal-overlay" id="keyModal">
     <div class="modal">
-      <h3>Enter Gemini API Key</h3>
-      <p>Your API key connects directly from your phone's browser to the Gemini Live API.</p>
+      <h3>Gemini Live Settings</h3>
+      <p>Configure your API key and translation preferences.</p>
+      
+      <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:6px;">Gemini API Key:</label>
       <input type="password" id="keyInput" placeholder="AIzaSy..." autocomplete="off">
+      
+      <div style="margin-bottom:1.25rem;">
+        <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:8px;">Chinese Script (when translating English ➔ Chinese):</label>
+        <div style="display:flex; gap:16px; font-size:0.85rem; background:rgba(0,0,0,0.25); padding:10px 12px; border-radius:var(--radius-md); border:1px solid var(--surface-border);">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="radio" name="zhScript" value="zh-Hans" id="scriptHans" checked> Simplified (简体中文)
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="radio" name="zhScript" value="zh-Hant" id="scriptHant"> Traditional (繁體中文)
+          </label>
+        </div>
+      </div>
+
       <div class="modal-actions">
         <button class="btn-cancel" id="cancelKeyBtn">Cancel</button>
-        <button class="btn-save" id="saveKeyBtn">Save & Start</button>
+        <button class="btn-save" id="saveKeyBtn">Save & Apply</button>
       </div>
     </div>
   </div>
@@ -629,6 +722,8 @@
     let apiKey = localStorage.getItem("gemini_api_key") || "";
     let isMuted = true; // Silent subtitles mode by default (user preference)
     let isRunning = false;
+    let currentDirection = localStorage.getItem("subtitles_direction") || "zh-to-en"; // "zh-to-en" or "en-to-zh"
+    let chineseScript = localStorage.getItem("chinese_script") || "zh-Hans"; // "zh-Hans" or "zh-Hant"
 
     // Network & Audio State
     let ws = null;
@@ -663,6 +758,74 @@
     const diagPackets = document.getElementById("diagPackets");
     const diagDebug = document.getElementById("diagDebug");
 
+    // Bilingual & Swap Elements
+    const sourceFlag = document.getElementById("sourceFlag");
+    const sourceLangName = document.getElementById("sourceLangName");
+    const targetFlag = document.getElementById("targetFlag");
+    const targetLangName = document.getElementById("targetLangName");
+    const targetTag = document.getElementById("targetTag");
+    const swapLangBtn = document.getElementById("swapLangBtn");
+    const headerSubTitle = document.getElementById("headerSubTitle");
+    const cardTargetFlag = document.getElementById("cardTargetFlag");
+    const cardTitleText = document.getElementById("cardTitleText");
+    const cardBadge = document.getElementById("cardBadge");
+    const subtitleCard = document.getElementById("subtitleCard");
+    const scriptHans = document.getElementById("scriptHans");
+    const scriptHant = document.getElementById("scriptHant");
+
+    function getTargetLanguageCode() {
+      return (currentDirection === "zh-to-en") ? "en" : chineseScript;
+    }
+
+    function updateDirectionUI() {
+      const isZhToEn = (currentDirection === "zh-to-en");
+
+      if (isZhToEn) {
+        if (sourceFlag) sourceFlag.textContent = "🇨🇳";
+        if (sourceLangName) sourceLangName.textContent = "Chinese";
+        if (targetFlag) targetFlag.textContent = "🇺🇸";
+        if (targetLangName) targetLangName.textContent = "English";
+        if (targetTag) targetTag.classList.remove("chinese-active");
+        if (swapLangBtn) swapLangBtn.classList.remove("swapped");
+        if (headerSubTitle) headerSubTitle.textContent = "Chinese ➔ English";
+
+        if (cardTargetFlag) cardTargetFlag.textContent = "🇺🇸";
+        if (cardTitleText) cardTitleText.textContent = "Live English Subtitles";
+        if (cardBadge) {
+          cardBadge.className = "card-badge badge-en";
+          cardBadge.textContent = "Live Translation";
+        }
+        if (subtitleCard) subtitleCard.classList.remove("target-chinese");
+
+        if (englishEmpty) {
+          englishEmpty.innerHTML = `Tap <strong>Start Listening</strong>.<br>When Chinese speech is heard, English subtitles stream here as normal flowing sentences.`;
+        }
+      } else {
+        if (sourceFlag) sourceFlag.textContent = "🇺🇸";
+        if (sourceLangName) sourceLangName.textContent = "English";
+        if (targetFlag) targetFlag.textContent = "🇨🇳";
+        if (targetLangName) targetLangName.textContent = "Chinese";
+        if (targetTag) targetTag.classList.add("chinese-active");
+        if (swapLangBtn) swapLangBtn.classList.add("swapped");
+        if (headerSubTitle) headerSubTitle.textContent = "English ➔ Chinese";
+
+        if (cardTargetFlag) cardTargetFlag.textContent = "🇨🇳";
+        const scriptName = (chineseScript === "zh-Hant") ? "Traditional" : "Simplified";
+        if (cardTitleText) cardTitleText.textContent = `Live Chinese Subtitles (${scriptName})`;
+        if (cardBadge) {
+          cardBadge.className = "card-badge badge-zh";
+          cardBadge.textContent = "实时翻译";
+        }
+        if (subtitleCard) subtitleCard.classList.add("target-chinese");
+
+        if (englishEmpty) {
+          englishEmpty.innerHTML = `Tap <strong>Start Listening</strong>.<br>When English speech is heard, Chinese subtitles stream here as normal flowing sentences.`;
+        }
+      }
+
+      updateMuteUI();
+    }
+
     function extractText(obj) {
       if (!obj) return "";
       if (typeof obj === "string") return obj;
@@ -686,17 +849,18 @@
         }
       } catch (e) {}
 
-      updateMuteUI();
+      updateDirectionUI();
     }
 
     function updateMuteUI() {
+      const targetLangName = (currentDirection === "zh-to-en") ? "English" : "Chinese";
       if (isMuted) {
         audioModeIcon.textContent = "🔇";
         audioModeText.textContent = "Silent Subtitle Mode: Output audio muted";
         toggleMuteBtn.textContent = "Enable Voice Audio";
       } else {
         audioModeIcon.textContent = "🔊";
-        audioModeText.textContent = "Spoken Audio Mode: English will be read aloud";
+        audioModeText.textContent = `Spoken Audio Mode: ${targetLangName} will be read aloud`;
         toggleMuteBtn.textContent = "Mute Voice Audio";
       }
     }
@@ -708,6 +872,11 @@
 
     openSettingsBtn.onclick = () => {
       keyInput.value = apiKey;
+      if (chineseScript === "zh-Hant" && scriptHant) {
+        scriptHant.checked = true;
+      } else if (scriptHans) {
+        scriptHans.checked = true;
+      }
       keyModal.classList.add("open");
     };
 
@@ -716,9 +885,41 @@
     saveKeyBtn.onclick = () => {
       apiKey = keyInput.value.trim();
       localStorage.setItem("gemini_api_key", apiKey);
+
+      const selScript = document.querySelector('input[name="zhScript"]:checked');
+      if (selScript) {
+        chineseScript = selScript.value;
+        localStorage.setItem("chinese_script", chineseScript);
+      }
+
       keyModal.classList.remove("open");
-      if (!isRunning) startSession();
+      updateDirectionUI();
+
+      if (!isRunning) {
+        startSession();
+      } else {
+        restartWebSocket();
+      }
     };
+
+    async function handleSwap() {
+      currentDirection = (currentDirection === "zh-to-en") ? "en-to-zh" : "zh-to-en";
+      localStorage.setItem("subtitles_direction", currentDirection);
+      updateDirectionUI();
+
+      if (isRunning) {
+        finalizeCurrentParagraph();
+        setStatus("connecting", "Switching direction...");
+        const src = (currentDirection === "zh-to-en") ? "Chinese" : "English";
+        const tgt = (currentDirection === "zh-to-en") ? "English" : "Chinese";
+        if (diagDebug) diagDebug.textContent = `Swapping direction: Speak ${src} ➔ ${tgt} subtitles`;
+        restartWebSocket();
+      }
+    }
+
+    if (swapLangBtn) {
+      swapLangBtn.onclick = handleSwap;
+    }
 
     function setStatus(dotClass, text) {
       statusDot.className = "status-dot " + dotClass;
@@ -748,46 +949,71 @@
     function joinSentences(existing, incoming) {
       if (!existing) {
         incoming = incoming.trim();
-        return incoming ? incoming.charAt(0).toUpperCase() + incoming.slice(1) : "";
+        if (currentDirection === "zh-to-en") {
+          return incoming ? incoming.charAt(0).toUpperCase() + incoming.slice(1) : "";
+        }
+        return incoming;
       }
       existing = existing.trim();
       incoming = incoming.trim();
       if (!incoming) return existing;
 
       // Avoid exact suffix duplicate
-      if (existing.toLowerCase().endsWith(incoming.toLowerCase())) {
+      if (existing.endsWith(incoming) || (currentDirection === "zh-to-en" && existing.toLowerCase().endsWith(incoming.toLowerCase()))) {
         return existing;
       }
 
-      // Check for word-level overlap
-      const existWords = existing.split(/\s+/);
-      const inWords = incoming.split(/\s+/);
-      let maxOverlap = 0;
-      for (let len = Math.min(existWords.length, inWords.length); len > 0; len--) {
-        const existSlice = existWords.slice(existWords.length - len).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, "")).join(" ");
-        const inSlice = inWords.slice(0, len).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, "")).join(" ");
-        if (existSlice && existSlice === inSlice) {
-          maxOverlap = len;
-          break;
+      if (currentDirection === "en-to-zh") {
+        // Target is Chinese: character and substring overlap detection
+        let maxOverlap = 0;
+        const maxLen = Math.min(existing.length, incoming.length, 30);
+        for (let len = maxLen; len > 0; len--) {
+          if (existing.slice(-len) === incoming.slice(0, len)) {
+            maxOverlap = len;
+            break;
+          }
         }
-      }
+        if (maxOverlap > 0) {
+          incoming = incoming.slice(maxOverlap);
+          if (!incoming) return existing;
+        }
 
-      if (maxOverlap > 0) {
-        incoming = inWords.slice(maxOverlap).join(" ");
-        if (!incoming) return existing;
-      }
+        // Only insert space if boundary has ASCII alphanumerics on both sides
+        const lastChar = existing.slice(-1);
+        const firstChar = incoming.charAt(0);
+        const needsSpace = /[a-zA-Z0-9]/.test(lastChar) && /[a-zA-Z0-9]/.test(firstChar);
+        return existing + (needsSpace ? " " : "") + incoming;
+      } else {
+        // Target is English: word-level overlap detection
+        const existWords = existing.split(/\s+/);
+        const inWords = incoming.split(/\s+/);
+        let maxOverlap = 0;
+        for (let len = Math.min(existWords.length, inWords.length); len > 0; len--) {
+          const existSlice = existWords.slice(existWords.length - len).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, "")).join(" ");
+          const inSlice = inWords.slice(0, len).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, "")).join(" ");
+          if (existSlice && existSlice === inSlice) {
+            maxOverlap = len;
+            break;
+          }
+        }
 
-      // Capitalize first letter if previous ended with terminal punctuation (. ? !)
-      if (/[.!?]\s*$/.test(existing)) {
-        incoming = incoming.charAt(0).toUpperCase() + incoming.slice(1);
-      }
+        if (maxOverlap > 0) {
+          incoming = inWords.slice(maxOverlap).join(" ");
+          if (!incoming) return existing;
+        }
 
-      // Attach punctuation or contractions directly without space
-      if (/^[.,?!;:]/.test(incoming) || /^'[a-zA-Z]/.test(incoming)) {
-        return existing + incoming;
-      }
+        // Capitalize first letter if previous ended with terminal punctuation (. ? !)
+        if (/[.!?]\s*$/.test(existing)) {
+          incoming = incoming.charAt(0).toUpperCase() + incoming.slice(1);
+        }
 
-      return existing + " " + incoming;
+        // Attach punctuation or contractions directly without space
+        if (/^[.,?!;:]/.test(incoming) || /^'[a-zA-Z]/.test(incoming)) {
+          return existing + incoming;
+        }
+
+        return existing + " " + incoming;
+      }
     }
 
     function updateEnglish(text, isFinal) {
@@ -799,7 +1025,7 @@
       lastChunkTime = now;
 
       const currentText = currentParagraphEl ? (currentParagraphEl.getAttribute("data-text") || "") : "";
-      const endsWithTerminal = /[.!?]\s*$/.test(currentText);
+      const endsWithTerminal = /[.!?。！？]\s*$/.test(currentText);
 
       // Start new paragraph if:
       // 1. No paragraph exists yet
@@ -810,7 +1036,7 @@
           finalizeCurrentParagraph();
         }
         currentParagraphEl = document.createElement("div");
-        currentParagraphEl.className = "english-paragraph";
+        currentParagraphEl.className = "english-paragraph" + (currentDirection === "en-to-zh" ? " target-chinese" : "");
         currentParagraphEl.setAttribute("data-text", "");
         sentenceCountInParagraph = 0;
         englishBody.appendChild(currentParagraphEl);
@@ -821,7 +1047,7 @@
       currentParagraphEl.setAttribute("data-text", joined);
 
       // Count complete sentences
-      const sentences = joined.match(/[.!?](\s|$)/g);
+      const sentences = joined.match(/[.!?。！？](\s|$)/g);
       sentenceCountInParagraph = sentences ? sentences.length : 0;
 
       // Render flowing paragraph
@@ -1042,187 +1268,7 @@
         gainNode.connect(audioCtx.destination);
 
         // 4. CONNECT WEBSOCKET
-        setStatus("connecting", "Connecting to Gemini Live...");
-        if (diagDebug) diagDebug.textContent = "Connecting WebSocket to Google...";
-        const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
-        ws = new WebSocket(wsUrl);
-
-        ws.onopen = () => {
-          console.log("[Live API] WebSocket open");
-          setStatus("active", "Listening to room...");
-          if (diagDebug) diagDebug.textContent = "WebSocket connected! Sending translation setup...";
-
-          // Setup message for gemini-3.5-live-translate-preview
-          const setupMsg = {
-            setup: {
-              model: `models/${MODEL}`,
-              generationConfig: {
-                responseModalities: ["AUDIO"],
-                translationConfig: {
-                  targetLanguageCode: "en",
-                  echoTargetLanguage: true
-                }
-              },
-              inputAudioTranscription: {},
-              outputAudioTranscription: {}
-            }
-          };
-          ws.send(JSON.stringify(setupMsg));
-
-          isRunning = true;
-          startBtn.disabled = false;
-          startBtn.classList.add("active");
-          btnLabel.textContent = "Stop Listening";
-        };
-
-        ws.onmessage = async (e) => {
-          packetsRecv++;
-          updatePackets();
-
-          try {
-            let textData = e.data;
-            if (e.data instanceof Blob) {
-              textData = await e.data.text();
-            } else if (e.data instanceof ArrayBuffer) {
-              textData = new TextDecoder().decode(e.data);
-            } else if (typeof e.data !== 'string') {
-              textData = String(e.data);
-            }
-
-            const data = JSON.parse(textData);
-
-            // Check for API errors
-            if (data.error) {
-              console.error("Gemini Error:", data.error);
-              const errMsg = data.error.message || JSON.stringify(data.error);
-              addError(errMsg);
-              setStatus("error", "Error: " + errMsg);
-              if (diagDebug) diagDebug.textContent = "Error: " + errMsg.slice(0, 45);
-              return;
-            }
-
-            if (data.setupComplete || data.setup_complete) {
-              console.log("Setup complete! Live session ready.");
-              setStatus("active", "Listening to room...");
-              if (diagDebug) diagDebug.textContent = "Live ready! Speak Chinese to see English subtitles.";
-              return;
-            }
-
-            // Extract server content (support camelCase, snake_case, or direct content)
-            const sc = data.serverContent || data.server_content || (data.modelTurn || data.model_turn || data.outputTranscription || data.output_transcription ? data : null);
-            if (!sc) {
-              if (data.usageMetadata || data.usage_metadata) return;
-              if (diagDebug) diagDebug.textContent = "Msg keys: " + Object.keys(data).join(", ");
-              return;
-            }
-
-            const keys = Object.keys(sc);
-            let textFound = false;
-
-            // 1. Direct transcription checks (both camelCase and snake_case)
-            const inputT = sc.inputTranscription || sc.input_transcription;
-            const interimInputT = sc.interimInputTranscription || sc.interim_input_transcription;
-            const outputT = sc.outputTranscription || sc.output_transcription;
-            const interimOutputT = sc.interimOutputTranscription || sc.interim_output_transcription;
-
-            const inputTxt = extractText(inputT);
-            const interimInputTxt = extractText(interimInputT);
-            const outputTxt = extractText(outputT);
-            const interimOutputTxt = extractText(interimOutputT);
-
-            if (interimInputTxt) {
-              updateChinese(interimInputTxt, false);
-              textFound = true;
-            }
-            if (inputTxt) {
-              updateChinese(inputTxt, true);
-              textFound = true;
-            }
-
-            if (interimOutputTxt) {
-              updateEnglish(interimOutputTxt, false);
-              textFound = true;
-            }
-            if (outputTxt) {
-              updateEnglish(outputTxt, true);
-              textFound = true;
-            }
-
-            // 2. Direct streamed text tokens and audio from modelTurn
-            const mt = sc.modelTurn || sc.model_turn;
-            if (mt && Array.isArray(mt.parts)) {
-              for (const part of mt.parts) {
-                if (part.text) {
-                  appendEnglishToken(part.text);
-                  textFound = true;
-                }
-                const inlineData = part.inlineData || part.inline_data;
-                if (inlineData && inlineData.data) {
-                  playPCM24k(inlineData.data);
-                }
-              }
-            }
-
-            // 3. Fallback: recursively search for any string text in sc if not found
-            if (!textFound) {
-              const allTexts = [];
-              function searchTexts(o) {
-                if (!o || typeof o !== 'object') return;
-                for (const k in o) {
-                  if ((k === 'text' || k === 'transcript') && typeof o[k] === 'string' && o[k].trim()) {
-                    allTexts.push(o[k]);
-                  } else if (typeof o[k] === 'object') {
-                    searchTexts(o[k]);
-                  }
-                }
-              }
-              searchTexts(sc);
-              for (const txt of allTexts) {
-                textFound = true;
-                if (/[\u4e00-\u9fa5]/.test(txt)) {
-                  updateChinese(txt, true);
-                } else {
-                  updateEnglish(txt, true);
-                }
-              }
-            }
-
-            if (diagDebug) {
-              const preview = outputTxt || interimOutputTxt || inputTxt || (textFound ? "text-rendered" : "keys: " + keys.slice(0, 3).join(","));
-              diagDebug.textContent = `Live: ${preview.slice(0, 45)}`;
-            }
-
-            const turnComplete = sc.turnComplete || sc.turn_complete;
-            if (turnComplete) {
-              finalizeCurrentParagraph();
-            }
-
-          } catch (err) {
-            console.error("Error parsing message:", err);
-            diagStatus.textContent = "Err: " + (err.message || String(err)).slice(0, 20);
-            if (diagDebug) diagDebug.textContent = "Parse err: " + err.message;
-            addError("Parse error: " + err.message);
-          }
-        };
-
-        ws.onerror = (err) => {
-          console.error("WebSocket Error:", err);
-          addError("Connection error. Please check your API key or network.");
-          setStatus("error", "Connection error");
-        };
-
-        ws.onclose = (event) => {
-          console.log("WebSocket Closed:", event.code, event.reason);
-          if (isRunning) {
-            let reason = event.reason ? ` (${event.reason})` : "";
-            if (event.code === 1008 || event.code === 4000) {
-              addError("Connection refused by Gemini" + reason + ". Check that your API key is valid.");
-            } else if (event.code !== 1000 && event.code !== 1005) {
-              addError(`Session closed: Code ${event.code}${reason}`);
-            }
-            stopSession();
-          }
-        };
+        connectWebSocket();
 
       } catch (err) {
         console.error("Failed to start session:", err);
@@ -1230,6 +1276,203 @@
         setStatus("error", "Mic Error");
         stopSession();
       }
+    }
+
+    function connectWebSocket() {
+      if (!apiKey) return;
+      setStatus("connecting", "Connecting to Gemini Live...");
+      if (diagDebug) diagDebug.textContent = "Connecting WebSocket to Google...";
+      const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log("[Live API] WebSocket open");
+        setStatus("active", "Listening to room...");
+        const src = (currentDirection === "zh-to-en") ? "Chinese" : "English";
+        const tgt = (currentDirection === "zh-to-en") ? "English" : "Chinese";
+        if (diagDebug) diagDebug.textContent = `WebSocket connected! Speak ${src} for ${tgt} subtitles...`;
+
+        // Setup message for gemini-3.5-live-translate-preview
+        const setupMsg = {
+          setup: {
+            model: `models/${MODEL}`,
+            generationConfig: {
+              responseModalities: ["AUDIO"],
+              translationConfig: {
+                targetLanguageCode: getTargetLanguageCode(),
+                echoTargetLanguage: true
+              }
+            },
+            inputAudioTranscription: {},
+            outputAudioTranscription: {}
+          }
+        };
+        ws.send(JSON.stringify(setupMsg));
+
+        isRunning = true;
+        startBtn.disabled = false;
+        startBtn.classList.add("active");
+        btnLabel.textContent = "Stop Listening";
+      };
+
+      ws.onmessage = async (e) => {
+        packetsRecv++;
+        updatePackets();
+
+        try {
+          let textData = e.data;
+          if (e.data instanceof Blob) {
+            textData = await e.data.text();
+          } else if (e.data instanceof ArrayBuffer) {
+            textData = new TextDecoder().decode(e.data);
+          } else if (typeof e.data !== 'string') {
+            textData = String(e.data);
+          }
+
+          const data = JSON.parse(textData);
+
+          // Check for API errors
+          if (data.error) {
+            console.error("Gemini Error:", data.error);
+            const errMsg = data.error.message || JSON.stringify(data.error);
+            addError(errMsg);
+            setStatus("error", "Error: " + errMsg);
+            if (diagDebug) diagDebug.textContent = "Error: " + errMsg.slice(0, 45);
+            return;
+          }
+
+          if (data.setupComplete || data.setup_complete) {
+            console.log("Setup complete! Live session ready.");
+            setStatus("active", "Listening to room...");
+            const src = (currentDirection === "zh-to-en") ? "Chinese" : "English";
+            const tgt = (currentDirection === "zh-to-en") ? "English" : "Chinese";
+            if (diagDebug) diagDebug.textContent = `Live ready! Speak ${src} to see ${tgt} subtitles.`;
+            return;
+          }
+
+          // Extract server content (support camelCase, snake_case, or direct content)
+          const sc = data.serverContent || data.server_content || (data.modelTurn || data.model_turn || data.outputTranscription || data.output_transcription ? data : null);
+          if (!sc) {
+            if (data.usageMetadata || data.usage_metadata) return;
+            if (diagDebug) diagDebug.textContent = "Msg keys: " + Object.keys(data).join(", ");
+            return;
+          }
+
+          const keys = Object.keys(sc);
+          let textFound = false;
+
+          // 1. Direct transcription checks (both camelCase and snake_case)
+          const inputT = sc.inputTranscription || sc.input_transcription;
+          const interimInputT = sc.interimInputTranscription || sc.interim_input_transcription;
+          const outputT = sc.outputTranscription || sc.output_transcription;
+          const interimOutputT = sc.interimOutputTranscription || sc.interim_output_transcription;
+
+          const inputTxt = extractText(inputT);
+          const interimInputTxt = extractText(interimInputT);
+          const outputTxt = extractText(outputT);
+          const interimOutputTxt = extractText(interimOutputT);
+
+          if (interimInputTxt) {
+            updateChinese(interimInputTxt, false);
+            textFound = true;
+          }
+          if (inputTxt) {
+            updateChinese(inputTxt, true);
+            textFound = true;
+          }
+
+          if (interimOutputTxt) {
+            updateEnglish(interimOutputTxt, false);
+            textFound = true;
+          }
+          if (outputTxt) {
+            updateEnglish(outputTxt, true);
+            textFound = true;
+          }
+
+          // 2. Direct streamed text tokens and audio from modelTurn
+          const mt = sc.modelTurn || sc.model_turn;
+          if (mt && Array.isArray(mt.parts)) {
+            for (const part of mt.parts) {
+              if (part.text) {
+                appendEnglishToken(part.text);
+                textFound = true;
+              }
+              const inlineData = part.inlineData || part.inline_data;
+              if (inlineData && inlineData.data) {
+                playPCM24k(inlineData.data);
+              }
+            }
+          }
+
+          // 3. Fallback: recursively search for any string text in sc if not found
+          if (!textFound) {
+            const allTexts = [];
+            function searchTexts(o) {
+              if (!o || typeof o !== 'object') return;
+              for (const k in o) {
+                if ((k === 'text' || k === 'transcript') && typeof o[k] === 'string' && o[k].trim()) {
+                  allTexts.push(o[k]);
+                } else if (typeof o[k] === 'object') {
+                  searchTexts(o[k]);
+                }
+              }
+            }
+            searchTexts(sc);
+            for (const txt of allTexts) {
+              textFound = true;
+              updateEnglish(txt, true);
+            }
+          }
+
+          if (diagDebug) {
+            const preview = outputTxt || interimOutputTxt || inputTxt || (textFound ? "text-rendered" : "keys: " + keys.slice(0, 3).join(","));
+            diagDebug.textContent = `Live: ${preview.slice(0, 45)}`;
+          }
+
+          const turnComplete = sc.turnComplete || sc.turn_complete;
+          if (turnComplete) {
+            finalizeCurrentParagraph();
+          }
+
+        } catch (err) {
+          console.error("Error parsing message:", err);
+          diagStatus.textContent = "Err: " + (err.message || String(err)).slice(0, 20);
+          if (diagDebug) diagDebug.textContent = "Parse err: " + err.message;
+          addError("Parse error: " + err.message);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.error("WebSocket Error:", err);
+        addError("Connection error. Please check your API key or network.");
+        setStatus("error", "Connection error");
+      };
+
+      ws.onclose = (event) => {
+        console.log("WebSocket Closed:", event.code, event.reason);
+        if (isRunning) {
+          let reason = event.reason ? ` (${event.reason})` : "";
+          if (event.code === 1008 || event.code === 4000) {
+            addError("Connection refused by Gemini" + reason + ". Check that your API key is valid.");
+          } else if (event.code !== 1000 && event.code !== 1005) {
+            addError(`Session closed: Code ${event.code}${reason}`);
+          }
+          stopSession();
+        }
+      };
+    }
+
+    function restartWebSocket() {
+      if (ws) {
+        try { ws.close(); } catch (e) {}
+        ws = null;
+      }
+      setTimeout(() => {
+        if (isRunning) {
+          connectWebSocket();
+        }
+      }, 150);
     }
 
     function stopSession() {

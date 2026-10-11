@@ -41,6 +41,20 @@ def main():
     from google import genai
     from google.genai import types
 
+    import argparse
+    parser = argparse.ArgumentParser(description="Live Gemini Audio Translator (Chinese <-> English)")
+    parser.add_argument("-d", "--direction", choices=["zh-to-en", "en-to-zh"], default="zh-to-en",
+                        help="Translation direction: 'zh-to-en' or 'en-to-zh' (default: zh-to-en)")
+    parser.add_argument("--script", choices=["zh-Hans", "zh-Hant"], default="zh-Hans",
+                        help="Chinese script when translating to Chinese: 'zh-Hans' or 'zh-Hant' (default: zh-Hans)")
+    args = parser.parse_args()
+
+    target_lang = "en" if args.direction == "zh-to-en" else args.script
+    src_label = "Chinese" if args.direction == "zh-to-en" else "English"
+    tgt_label = "English" if args.direction == "zh-to-en" else "Chinese"
+    src_flag = "🇨🇳" if args.direction == "zh-to-en" else "🇺🇸"
+    tgt_flag = "🇺🇸" if args.direction == "zh-to-en" else "🇨🇳"
+
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         print("\n[!] GEMINI_API_KEY environment variable not set.")
@@ -61,7 +75,7 @@ def main():
         input_audio_transcription=types.AudioTranscriptionConfig(),
         output_audio_transcription=types.AudioTranscriptionConfig(),
         translation_config=types.TranslationConfig(
-            target_language_code="en",
+            target_language_code=target_lang,
             echo_target_language=False
         )
     )
@@ -95,8 +109,8 @@ def main():
 
     async def receive_translation(session):
         print("\n" + "=" * 60)
-        print(" 🎙️  Listening to Chinese... Speak into your microphone!")
-        print(" 🔊 English translation will play through your speakers.")
+        print(f" 🎙️  Listening to {src_label}... Speak into your microphone!")
+        print(f" 🔊 {tgt_label} translation will play through your speakers.")
         print(" Press Ctrl+C to stop.")
         print("=" * 60 + "\n")
 
@@ -106,10 +120,10 @@ def main():
                 
             content = response.server_content
             if content.input_transcription and content.input_transcription.text:
-                print(f"\r🇨🇳 [Chinese]: {content.input_transcription.text}")
+                print(f"\r{src_flag} [{src_label}]: {content.input_transcription.text}")
                 
             if content.output_transcription and content.output_transcription.text:
-                print(f"🇺🇸 [English]: {content.output_transcription.text}\n")
+                print(f"{tgt_flag} [{tgt_label}]: {content.output_transcription.text}\n")
                 
             if content.model_turn:
                 for part in content.model_turn.parts:
