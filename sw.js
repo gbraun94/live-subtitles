@@ -1,5 +1,5 @@
 // Service Worker for Live Subtitles PWA
-const CACHE_NAME = 'live-subtitles-v6';
+const CACHE_NAME = 'live-subtitles-v7';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

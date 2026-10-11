@@ -748,8 +748,11 @@
         <button class="btn-save" id="saveKeyBtn">Save & Apply</button>
       </div>
 
-      <div style="border-top:1px solid var(--surface-border); padding-top:12px;">
-        <button type="button" id="forceUpdateBtn" class="icon-btn" style="width:100%; justify-content:center; padding:9px; background:rgba(255,255,255,0.05); font-size:0.8rem; color:var(--text-muted);">
+      <div style="border-top:1px solid var(--surface-border); padding-top:12px; display:flex; flex-direction:column; gap:8px;">
+        <button type="button" id="copyShareLinkBtn" class="icon-btn" style="width:100%; justify-content:center; padding:9px; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); font-size:0.8rem; color:#60a5fa; cursor:pointer;">
+          🔗 Copy Pre-configured Link for Family
+        </button>
+        <button type="button" id="forceUpdateBtn" class="icon-btn" style="width:100%; justify-content:center; padding:9px; background:rgba(255,255,255,0.05); font-size:0.8rem; color:var(--text-muted); cursor:pointer;">
           🔄 Force Update & Clear Cache
         </button>
       </div>
@@ -881,6 +884,33 @@
     }
 
     async function init() {
+      // 1. Support pre-configured URL params (?key=...&src=...&tgt=...) for easy sharing
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryKey = urlParams.get("key") || urlParams.get("apiKey");
+        const querySrc = urlParams.get("src") || urlParams.get("source");
+        const queryTgt = urlParams.get("tgt") || urlParams.get("target");
+
+        if (queryKey) {
+          apiKey = queryKey.trim();
+          localStorage.setItem("gemini_api_key", apiKey);
+        }
+        if (querySrc && LANGUAGES[querySrc]) {
+          sourceLang = querySrc;
+          localStorage.setItem("subtitles_source_lang", sourceLang);
+        }
+        if (queryTgt && LANGUAGES[queryTgt]) {
+          targetLang = queryTgt;
+          localStorage.setItem("subtitles_target_lang", targetLang);
+        }
+
+        // Clean query parameters from URL bar to keep the key private
+        if (queryKey || querySrc || queryTgt) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } catch (e) {}
+
+      // 2. Local Python server config fallback
       try {
         const res = await fetch("/api/config");
         if (res.ok) {
@@ -1628,6 +1658,42 @@
           alert("To install this app on your phone:\n\n1. Tap your browser's 3-dot menu (⋮)\n2. Tap 'Install app' or 'Add to Home screen'");
         }
       });
+    }
+
+    // Copy Shareable Setup Link for Family
+    const copyShareLinkBtn = document.getElementById("copyShareLinkBtn");
+    if (copyShareLinkBtn) {
+      copyShareLinkBtn.onclick = async () => {
+        const keyToShare = keyInput.value.trim() || apiKey;
+        const base = window.location.origin + window.location.pathname;
+        const params = [];
+        if (keyToShare) params.push(`key=${encodeURIComponent(keyToShare)}`);
+        if (sourceLang) params.push(`src=${encodeURIComponent(sourceLang)}`);
+        if (targetLang) params.push(`tgt=${encodeURIComponent(targetLang)}`);
+        const shareUrl = params.length > 0 ? `${base}?${params.join("&")}` : base;
+
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(shareUrl);
+          } else {
+            const temp = document.createElement("input");
+            temp.value = shareUrl;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand("copy");
+            document.body.removeChild(temp);
+          }
+          const orig = copyShareLinkBtn.textContent;
+          copyShareLinkBtn.textContent = "✅ Link Copied! Send this to your father";
+          copyShareLinkBtn.style.color = "#34d399";
+          setTimeout(() => {
+            copyShareLinkBtn.textContent = orig;
+            copyShareLinkBtn.style.color = "#60a5fa";
+          }, 3500);
+        } catch (err) {
+          prompt("Copy this setup link:", shareUrl);
+        }
+      };
     }
 
     // Force Update & Clear Cache Handler
