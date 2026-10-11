@@ -707,9 +707,15 @@
         </div>
       </div>
 
-      <div class="modal-actions">
+      <div class="modal-actions" style="margin-bottom:12px;">
         <button class="btn-cancel" id="cancelKeyBtn">Cancel</button>
         <button class="btn-save" id="saveKeyBtn">Save & Apply</button>
+      </div>
+
+      <div style="border-top:1px solid var(--surface-border); padding-top:12px;">
+        <button type="button" id="forceUpdateBtn" class="icon-btn" style="width:100%; justify-content:center; padding:9px; background:rgba(255,255,255,0.05); font-size:0.8rem; color:var(--text-muted);">
+          🔄 Force Update & Clear Cache
+        </button>
       </div>
     </div>
   </div>
@@ -723,7 +729,11 @@
     let isMuted = true; // Silent subtitles mode by default (user preference)
     let isRunning = false;
     let currentDirection = localStorage.getItem("subtitles_direction") || "zh-to-en"; // "zh-to-en" or "en-to-zh"
-    let chineseScript = localStorage.getItem("chinese_script") || "zh-Hant"; // "zh-Hant" or "zh-Hans"
+    let chineseScript = localStorage.getItem("chinese_script");
+    if (!chineseScript || chineseScript === "zh-Hans") {
+      chineseScript = "zh-Hant";
+      localStorage.setItem("chinese_script", "zh-Hant");
+    }
 
     // Network & Audio State
     let ws = null;
@@ -1558,11 +1568,53 @@
       });
     }
 
-    // Register Service Worker for PWA
+    // Force Update & Clear Cache Handler
+    const forceUpdateBtn = document.getElementById("forceUpdateBtn");
+    if (forceUpdateBtn) {
+      forceUpdateBtn.onclick = async () => {
+        forceUpdateBtn.textContent = "Clearing Cache & Reloading...";
+        if ('serviceWorker' in navigator) {
+          try {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) {
+              await r.unregister();
+            }
+          } catch (e) {}
+        }
+        if ('caches' in window) {
+          try {
+            const keys = await caches.keys();
+            for (const k of keys) {
+              await caches.delete(k);
+            }
+          } catch (e) {}
+        }
+        localStorage.removeItem("chinese_script");
+        window.location.reload(true);
+      };
+    }
+
+    // Register Service Worker for PWA with auto update
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          reg.update();
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  window.location.reload();
+                }
+              });
+            }
+          });
+        }).catch(err => {
           console.warn('Service worker registration failed:', err);
+        });
+
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          window.location.reload();
         });
       });
     }

@@ -1,5 +1,5 @@
 // Service Worker for Live Subtitles PWA
-const CACHE_NAME = 'live-subtitles-v4';
+const CACHE_NAME = 'live-subtitles-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,12 +9,12 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (e) => {
+  self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
@@ -25,7 +25,7 @@ self.addEventListener('activate', (e) => {
       );
     })
   );
-  self.clients.claim();
+  return self.clients.claim();
 });
 
 self.addEventListener('fetch', (e) => {
@@ -33,13 +33,33 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
+  const url = new URL(e.request.url);
+  const isHtml = e.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/');
+
+  if (isHtml) {
+    // Network-first with no-cache for index.html / navigation to prevent stale PWA cache
+    e.respondWith(
+      fetch(e.request, { cache: 'no-cache' })
+        .then((res) => {
+          if (res && res.status === 200) {
+            const resClone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request).then(cached => cached || caches.match('./index.html')))
+    );
+    return;
+  }
+
   e.respondWith(
-    fetch(e.request)
-      .then((res) => {
+    caches.match(e.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(e.request).then((res) => {
         const resClone = res.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone));
         return res;
-      })
-      .catch(() => caches.match(e.request))
+      });
+    })
   );
 });
