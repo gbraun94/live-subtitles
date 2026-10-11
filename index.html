@@ -617,7 +617,7 @@
     <div class="action-panel">
       <div class="lang-direction" id="langDirection">
         <div class="lang-tag source-tag" id="sourceTag">
-          <span class="flag" id="sourceFlag">🇨🇳</span>
+          <span class="flag" id="sourceFlag">🇹🇼</span>
           <span id="sourceLangName">Chinese</span>
         </div>
 
@@ -699,10 +699,10 @@
         <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:8px;">Chinese Script (when translating English ➔ Chinese):</label>
         <div style="display:flex; gap:16px; font-size:0.85rem; background:rgba(0,0,0,0.25); padding:10px 12px; border-radius:var(--radius-md); border:1px solid var(--surface-border);">
           <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-            <input type="radio" name="zhScript" value="zh-Hans" id="scriptHans" checked> Simplified (简体中文)
+            <input type="radio" name="zhScript" value="zh-Hant" id="scriptHant" checked> Traditional (繁體中文)
           </label>
           <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-            <input type="radio" name="zhScript" value="zh-Hant" id="scriptHant"> Traditional (繁體中文)
+            <input type="radio" name="zhScript" value="zh-Hans" id="scriptHans"> Simplified (简体中文)
           </label>
         </div>
       </div>
@@ -723,7 +723,7 @@
     let isMuted = true; // Silent subtitles mode by default (user preference)
     let isRunning = false;
     let currentDirection = localStorage.getItem("subtitles_direction") || "zh-to-en"; // "zh-to-en" or "en-to-zh"
-    let chineseScript = localStorage.getItem("chinese_script") || "zh-Hans"; // "zh-Hans" or "zh-Hant"
+    let chineseScript = localStorage.getItem("chinese_script") || "zh-Hant"; // "zh-Hant" or "zh-Hans"
 
     // Network & Audio State
     let ws = null;
@@ -781,7 +781,7 @@
       const isZhToEn = (currentDirection === "zh-to-en");
 
       if (isZhToEn) {
-        if (sourceFlag) sourceFlag.textContent = "🇨🇳";
+        if (sourceFlag) sourceFlag.textContent = "🇹🇼";
         if (sourceLangName) sourceLangName.textContent = "Chinese";
         if (targetFlag) targetFlag.textContent = "🇺🇸";
         if (targetLangName) targetLangName.textContent = "English";
@@ -803,18 +803,18 @@
       } else {
         if (sourceFlag) sourceFlag.textContent = "🇺🇸";
         if (sourceLangName) sourceLangName.textContent = "English";
-        if (targetFlag) targetFlag.textContent = "🇨🇳";
+        if (targetFlag) targetFlag.textContent = "🇹🇼";
         if (targetLangName) targetLangName.textContent = "Chinese";
         if (targetTag) targetTag.classList.add("chinese-active");
         if (swapLangBtn) swapLangBtn.classList.add("swapped");
         if (headerSubTitle) headerSubTitle.textContent = "English ➔ Chinese";
 
-        if (cardTargetFlag) cardTargetFlag.textContent = "🇨🇳";
+        if (cardTargetFlag) cardTargetFlag.textContent = "🇹🇼";
         const scriptName = (chineseScript === "zh-Hant") ? "Traditional" : "Simplified";
         if (cardTitleText) cardTitleText.textContent = `Live Chinese Subtitles (${scriptName})`;
         if (cardBadge) {
           cardBadge.className = "card-badge badge-zh";
-          cardBadge.textContent = "实时翻译";
+          cardBadge.textContent = (chineseScript === "zh-Hant") ? "即時翻譯" : "实时翻译";
         }
         if (subtitleCard) subtitleCard.classList.add("target-chinese");
 

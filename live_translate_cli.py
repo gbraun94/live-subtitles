@@ -45,15 +45,15 @@ def main():
     parser = argparse.ArgumentParser(description="Live Gemini Audio Translator (Chinese <-> English)")
     parser.add_argument("-d", "--direction", choices=["zh-to-en", "en-to-zh"], default="zh-to-en",
                         help="Translation direction: 'zh-to-en' or 'en-to-zh' (default: zh-to-en)")
-    parser.add_argument("--script", choices=["zh-Hans", "zh-Hant"], default="zh-Hans",
-                        help="Chinese script when translating to Chinese: 'zh-Hans' or 'zh-Hant' (default: zh-Hans)")
+    parser.add_argument("--script", choices=["zh-Hant", "zh-Hans"], default="zh-Hant",
+                        help="Chinese script when translating to Chinese: 'zh-Hant' or 'zh-Hans' (default: zh-Hant)")
     args = parser.parse_args()
 
     target_lang = "en" if args.direction == "zh-to-en" else args.script
     src_label = "Chinese" if args.direction == "zh-to-en" else "English"
     tgt_label = "English" if args.direction == "zh-to-en" else "Chinese"
-    src_flag = "🇨🇳" if args.direction == "zh-to-en" else "🇺🇸"
-    tgt_flag = "🇺🇸" if args.direction == "zh-to-en" else "🇨🇳"
+    src_flag = "🇹🇼" if args.direction == "zh-to-en" else "🇺🇸"
+    tgt_flag = "🇺🇸" if args.direction == "zh-to-en" else "🇹🇼"
 
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
