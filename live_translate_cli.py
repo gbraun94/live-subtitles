@@ -41,19 +41,42 @@ def main():
     from google import genai
     from google.genai import types
 
+    LANGUAGES = {
+        "zh-Hant": ("Chinese (Trad.)", "🇹🇼"),
+        "zh-Hans": ("Chinese (Simp.)", "🇨🇳"),
+        "en": ("English", "🇺🇸"),
+        "my": ("Burmese", "🇲🇲"),
+        "de": ("German", "🇩🇪"),
+        "es": ("Spanish", "🇪🇸"),
+        "th": ("Thai", "🇹🇭"),
+        "pt-BR": ("Portuguese", "🇧🇷"),
+        "ar": ("Arabic", "🇸🇦"),
+    }
+
     import argparse
-    parser = argparse.ArgumentParser(description="Live Gemini Audio Translator (Chinese <-> English)")
-    parser.add_argument("-d", "--direction", choices=["zh-to-en", "en-to-zh"], default="zh-to-en",
-                        help="Translation direction: 'zh-to-en' or 'en-to-zh' (default: zh-to-en)")
+    parser = argparse.ArgumentParser(description="Live Gemini Audio Translator (Multilingual)")
+    parser.add_argument("-t", "--target", choices=list(LANGUAGES.keys()), default="en",
+                        help="Target translation language code (default: en)")
+    parser.add_argument("-s", "--source", choices=list(LANGUAGES.keys()), default="zh-Hant",
+                        help="Source spoken language (informational) (default: zh-Hant)")
+    parser.add_argument("-d", "--direction", choices=["zh-to-en", "en-to-zh"], default=None,
+                        help="Shortcut for translation direction: 'zh-to-en' or 'en-to-zh'")
     parser.add_argument("--script", choices=["zh-Hant", "zh-Hans"], default="zh-Hant",
-                        help="Chinese script when translating to Chinese: 'zh-Hant' or 'zh-Hans' (default: zh-Hant)")
+                        help="Chinese script when translating to Chinese: 'zh-Hant' or 'zh-Hans'")
     args = parser.parse_args()
 
-    target_lang = "en" if args.direction == "zh-to-en" else args.script
-    src_label = "Chinese" if args.direction == "zh-to-en" else "English"
-    tgt_label = "English" if args.direction == "zh-to-en" else "Chinese"
-    src_flag = "🇹🇼" if args.direction == "zh-to-en" else "🇺🇸"
-    tgt_flag = "🇺🇸" if args.direction == "zh-to-en" else "🇹🇼"
+    if args.direction == "zh-to-en":
+        target_lang = "en"
+        source_lang = "zh-Hant"
+    elif args.direction == "en-to-zh":
+        target_lang = args.script
+        source_lang = "en"
+    else:
+        target_lang = args.target
+        source_lang = args.source
+
+    src_label, src_flag = LANGUAGES.get(source_lang, (source_lang, "🌐"))
+    tgt_label, tgt_flag = LANGUAGES.get(target_lang, (target_lang, "🌐"))
 
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:

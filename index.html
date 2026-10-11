@@ -214,37 +214,67 @@
     .lang-direction {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       font-size: 0.95rem;
       font-weight: 700;
       user-select: none;
+      flex-wrap: wrap;
     }
 
-    .lang-tag {
-      display: flex;
+    .lang-select-wrapper {
+      position: relative;
+      display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--surface-border);
-      transition: all 0.25s ease;
     }
 
-    .lang-tag.target-tag {
+    .lang-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      color: var(--text-main);
+      padding: 7px 28px 7px 12px;
+      border-radius: 9999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .lang-select:focus, .lang-select:hover {
+      border-color: var(--primary);
+      background: #232938;
+    }
+
+    .lang-select.target-select {
+      border-color: rgba(59, 130, 246, 0.5);
       background: rgba(59, 130, 246, 0.12);
-      border-color: rgba(59, 130, 246, 0.4);
       color: #93c5fd;
     }
 
-    .lang-tag.target-tag.chinese-active {
-      background: rgba(245, 158, 11, 0.12);
-      border-color: rgba(245, 158, 11, 0.4);
-      color: #fcd34d;
+    .lang-select-wrapper::after {
+      content: "";
+      position: absolute;
+      right: 12px;
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid var(--text-subtle);
+      pointer-events: none;
     }
 
-    .lang-tag .flag {
-      font-size: 1.25rem;
+    .lang-select option {
+      background: #161922;
+      color: #f3f4f6;
+    }
+
+    .rtl-text {
+      direction: rtl;
+      text-align: right;
     }
 
     .swap-btn {
@@ -616,18 +646,36 @@
     <!-- Primary Controls -->
     <div class="action-panel">
       <div class="lang-direction" id="langDirection">
-        <div class="lang-tag source-tag" id="sourceTag">
-          <span class="flag" id="sourceFlag">🇹🇼</span>
-          <span id="sourceLangName">Chinese</span>
+        <div class="lang-select-wrapper">
+          <select id="sourceLangSelect" class="lang-select" aria-label="Spoken Source Language">
+            <option value="zh-Hant">🇹🇼 Chinese (Trad.)</option>
+            <option value="zh-Hans">🇨🇳 Chinese (Simp.)</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="my">🇲🇲 Burmese</option>
+            <option value="de">🇩🇪 German</option>
+            <option value="es">🇪🇸 Spanish</option>
+            <option value="th">🇹🇭 Thai</option>
+            <option value="pt-BR">🇧🇷 Portuguese</option>
+            <option value="ar">🇸🇦 Arabic</option>
+          </select>
         </div>
 
-        <button class="swap-btn" id="swapLangBtn" title="Swap languages (Chinese ⇄ English)" aria-label="Swap language direction">
+        <button class="swap-btn" id="swapLangBtn" title="Swap languages" aria-label="Swap language direction">
           <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
         </button>
 
-        <div class="lang-tag target-tag" id="targetTag">
-          <span class="flag" id="targetFlag">🇺🇸</span>
-          <span id="targetLangName">English</span>
+        <div class="lang-select-wrapper">
+          <select id="targetLangSelect" class="lang-select target-select" aria-label="Subtitle Target Language">
+            <option value="en">🇺🇸 English</option>
+            <option value="zh-Hant">🇹🇼 Chinese (Trad.)</option>
+            <option value="zh-Hans">🇨🇳 Chinese (Simp.)</option>
+            <option value="my">🇲🇲 Burmese</option>
+            <option value="de">🇩🇪 German</option>
+            <option value="es">🇪🇸 Spanish</option>
+            <option value="th">🇹🇭 Thai</option>
+            <option value="pt-BR">🇧🇷 Portuguese</option>
+            <option value="ar">🇸🇦 Arabic</option>
+          </select>
         </div>
       </div>
 
@@ -674,7 +722,7 @@
         <div class="card-body" id="englishBody">
           <div class="empty-state" id="englishEmpty">
             Tap <strong>Start Listening</strong>.<br>
-            When Chinese speech is heard, English subtitles stream here as normal flowing sentences.
+            When speech is heard, subtitles stream here as normal flowing sentences.
           </div>
         </div>
       </div>
@@ -690,22 +738,10 @@
   <div class="modal-overlay" id="keyModal">
     <div class="modal">
       <h3>Gemini Live Settings</h3>
-      <p>Configure your API key and translation preferences.</p>
+      <p>Configure your Gemini API key and offline cache.</p>
       
       <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:6px;">Gemini API Key:</label>
       <input type="password" id="keyInput" placeholder="AIzaSy..." autocomplete="off">
-      
-      <div style="margin-bottom:1.25rem;">
-        <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:8px;">Chinese Script (when translating English ➔ Chinese):</label>
-        <div style="display:flex; gap:16px; font-size:0.85rem; background:rgba(0,0,0,0.25); padding:10px 12px; border-radius:var(--radius-md); border:1px solid var(--surface-border);">
-          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-            <input type="radio" name="zhScript" value="zh-Hant" id="scriptHant" checked> Traditional (繁體中文)
-          </label>
-          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-            <input type="radio" name="zhScript" value="zh-Hans" id="scriptHans"> Simplified (简体中文)
-          </label>
-        </div>
-      </div>
 
       <div class="modal-actions" style="margin-bottom:12px;">
         <button class="btn-cancel" id="cancelKeyBtn">Cancel</button>
@@ -725,15 +761,25 @@
     const TARGET_INPUT_RATE = 16000;
     const CHUNK_SIZE = 1600; // 100ms chunks
 
+    const LANGUAGES = {
+      "zh-Hant": { name: "Chinese (Trad.)", flag: "🇹🇼", noSpace: true },
+      "zh-Hans": { name: "Chinese (Simp.)", flag: "🇨🇳", noSpace: true },
+      "en":      { name: "English",          flag: "🇺🇸", noSpace: false },
+      "my":      { name: "Burmese",          flag: "🇲🇲", noSpace: true },
+      "de":      { name: "German",           flag: "🇩🇪", noSpace: false },
+      "es":      { name: "Spanish",          flag: "🇪🇸", noSpace: false },
+      "th":      { name: "Thai",             flag: "🇹🇭", noSpace: true },
+      "pt-BR":   { name: "Portuguese",       flag: "🇧🇷", noSpace: false },
+      "ar":      { name: "Arabic",           flag: "🇸🇦", noSpace: false, rtl: true }
+    };
+
     let apiKey = localStorage.getItem("gemini_api_key") || "";
     let isMuted = true; // Silent subtitles mode by default (user preference)
     let isRunning = false;
-    let currentDirection = localStorage.getItem("subtitles_direction") || "zh-to-en"; // "zh-to-en" or "en-to-zh"
-    let chineseScript = localStorage.getItem("chinese_script");
-    if (!chineseScript || chineseScript === "zh-Hans") {
-      chineseScript = "zh-Hant";
-      localStorage.setItem("chinese_script", "zh-Hant");
-    }
+    let sourceLang = localStorage.getItem("subtitles_source_lang") || "zh-Hant";
+    let targetLang = localStorage.getItem("subtitles_target_lang") || "en";
+    if (!LANGUAGES[sourceLang]) sourceLang = "zh-Hant";
+    if (!LANGUAGES[targetLang]) targetLang = "en";
 
     // Network & Audio State
     let ws = null;
@@ -755,7 +801,6 @@
     const englishBody = document.getElementById("englishBody");
     const chineseBody = document.getElementById("chineseBody");
     const englishEmpty = document.getElementById("englishEmpty");
-    const chineseEmpty = document.getElementById("chineseEmpty");
     const toggleMuteBtn = document.getElementById("toggleMuteBtn");
     const audioModeIcon = document.getElementById("audioModeIcon");
     const audioModeText = document.getElementById("audioModeText");
@@ -768,69 +813,57 @@
     const diagPackets = document.getElementById("diagPackets");
     const diagDebug = document.getElementById("diagDebug");
 
-    // Bilingual & Swap Elements
-    const sourceFlag = document.getElementById("sourceFlag");
-    const sourceLangName = document.getElementById("sourceLangName");
-    const targetFlag = document.getElementById("targetFlag");
-    const targetLangName = document.getElementById("targetLangName");
-    const targetTag = document.getElementById("targetTag");
+    // Multilingual & Swap Elements
+    const sourceLangSelect = document.getElementById("sourceLangSelect");
+    const targetLangSelect = document.getElementById("targetLangSelect");
     const swapLangBtn = document.getElementById("swapLangBtn");
     const headerSubTitle = document.getElementById("headerSubTitle");
     const cardTargetFlag = document.getElementById("cardTargetFlag");
     const cardTitleText = document.getElementById("cardTitleText");
     const cardBadge = document.getElementById("cardBadge");
     const subtitleCard = document.getElementById("subtitleCard");
-    const scriptHans = document.getElementById("scriptHans");
-    const scriptHant = document.getElementById("scriptHant");
 
     function getTargetLanguageCode() {
-      return (currentDirection === "zh-to-en") ? "en" : chineseScript;
+      return targetLang;
     }
 
     function updateDirectionUI() {
-      const isZhToEn = (currentDirection === "zh-to-en");
+      const src = LANGUAGES[sourceLang] || { name: sourceLang, flag: "🌐" };
+      const tgt = LANGUAGES[targetLang] || { name: targetLang, flag: "🌐" };
 
-      if (isZhToEn) {
-        if (sourceFlag) sourceFlag.textContent = "🇹🇼";
-        if (sourceLangName) sourceLangName.textContent = "Chinese";
-        if (targetFlag) targetFlag.textContent = "🇺🇸";
-        if (targetLangName) targetLangName.textContent = "English";
-        if (targetTag) targetTag.classList.remove("chinese-active");
-        if (swapLangBtn) swapLangBtn.classList.remove("swapped");
-        if (headerSubTitle) headerSubTitle.textContent = "Chinese ➔ English";
+      if (sourceLangSelect) sourceLangSelect.value = sourceLang;
+      if (targetLangSelect) targetLangSelect.value = targetLang;
 
-        if (cardTargetFlag) cardTargetFlag.textContent = "🇺🇸";
-        if (cardTitleText) cardTitleText.textContent = "Live English Subtitles";
-        if (cardBadge) {
-          cardBadge.className = "card-badge badge-en";
-          cardBadge.textContent = "Live Translation";
+      if (headerSubTitle) {
+        headerSubTitle.textContent = `${src.flag} ${src.name} ➔ ${tgt.flag} ${tgt.name}`;
+      }
+
+      if (cardTargetFlag) cardTargetFlag.textContent = tgt.flag;
+      if (cardTitleText) cardTitleText.textContent = `Live ${tgt.name} Subtitles`;
+
+      if (cardBadge) {
+        cardBadge.textContent = "Live Translation";
+        cardBadge.className = "card-badge " + (tgt.noSpace ? "badge-zh" : "badge-en");
+      }
+
+      if (subtitleCard) {
+        if (tgt.noSpace) {
+          subtitleCard.classList.add("target-chinese");
+        } else {
+          subtitleCard.classList.remove("target-chinese");
         }
-        if (subtitleCard) subtitleCard.classList.remove("target-chinese");
+      }
 
-        if (englishEmpty) {
-          englishEmpty.innerHTML = `Tap <strong>Start Listening</strong>.<br>When Chinese speech is heard, English subtitles stream here as normal flowing sentences.`;
+      if (englishBody) {
+        if (tgt.rtl) {
+          englishBody.classList.add("rtl-text");
+        } else {
+          englishBody.classList.remove("rtl-text");
         }
-      } else {
-        if (sourceFlag) sourceFlag.textContent = "🇺🇸";
-        if (sourceLangName) sourceLangName.textContent = "English";
-        if (targetFlag) targetFlag.textContent = "🇹🇼";
-        if (targetLangName) targetLangName.textContent = "Chinese";
-        if (targetTag) targetTag.classList.add("chinese-active");
-        if (swapLangBtn) swapLangBtn.classList.add("swapped");
-        if (headerSubTitle) headerSubTitle.textContent = "English ➔ Chinese";
+      }
 
-        if (cardTargetFlag) cardTargetFlag.textContent = "🇹🇼";
-        const scriptName = (chineseScript === "zh-Hant") ? "Traditional" : "Simplified";
-        if (cardTitleText) cardTitleText.textContent = `Live Chinese Subtitles (${scriptName})`;
-        if (cardBadge) {
-          cardBadge.className = "card-badge badge-zh";
-          cardBadge.textContent = (chineseScript === "zh-Hant") ? "即時翻譯" : "实时翻译";
-        }
-        if (subtitleCard) subtitleCard.classList.add("target-chinese");
-
-        if (englishEmpty) {
-          englishEmpty.innerHTML = `Tap <strong>Start Listening</strong>.<br>When English speech is heard, Chinese subtitles stream here as normal flowing sentences.`;
-        }
+      if (englishEmpty) {
+        englishEmpty.innerHTML = `Tap <strong>Start Listening</strong>.<br>When ${src.name} speech is heard, ${tgt.name} subtitles stream here as normal flowing sentences.`;
       }
 
       updateMuteUI();
@@ -863,14 +896,14 @@
     }
 
     function updateMuteUI() {
-      const targetLangName = (currentDirection === "zh-to-en") ? "English" : "Chinese";
+      const tgt = LANGUAGES[targetLang] || { name: targetLang };
       if (isMuted) {
         audioModeIcon.textContent = "🔇";
         audioModeText.textContent = "Silent Subtitle Mode: Output audio muted";
         toggleMuteBtn.textContent = "Enable Voice Audio";
       } else {
         audioModeIcon.textContent = "🔊";
-        audioModeText.textContent = `Spoken Audio Mode: ${targetLangName} will be read aloud`;
+        audioModeText.textContent = `Spoken Audio Mode: ${tgt.name} will be read aloud`;
         toggleMuteBtn.textContent = "Mute Voice Audio";
       }
     }
@@ -882,11 +915,6 @@
 
     openSettingsBtn.onclick = () => {
       keyInput.value = apiKey;
-      if (chineseScript === "zh-Hant" && scriptHant) {
-        scriptHant.checked = true;
-      } else if (scriptHans) {
-        scriptHans.checked = true;
-      }
       keyModal.classList.add("open");
     };
 
@@ -895,13 +923,6 @@
     saveKeyBtn.onclick = () => {
       apiKey = keyInput.value.trim();
       localStorage.setItem("gemini_api_key", apiKey);
-
-      const selScript = document.querySelector('input[name="zhScript"]:checked');
-      if (selScript) {
-        chineseScript = selScript.value;
-        localStorage.setItem("chinese_script", chineseScript);
-      }
-
       keyModal.classList.remove("open");
       updateDirectionUI();
 
@@ -913,22 +934,55 @@
     };
 
     async function handleSwap() {
-      currentDirection = (currentDirection === "zh-to-en") ? "en-to-zh" : "zh-to-en";
-      localStorage.setItem("subtitles_direction", currentDirection);
+      const temp = sourceLang;
+      sourceLang = targetLang;
+      targetLang = temp;
+
+      localStorage.setItem("subtitles_source_lang", sourceLang);
+      localStorage.setItem("subtitles_target_lang", targetLang);
+
+      if (swapLangBtn) {
+        swapLangBtn.classList.toggle("swapped");
+      }
+
       updateDirectionUI();
 
       if (isRunning) {
         finalizeCurrentParagraph();
-        setStatus("connecting", "Switching direction...");
-        const src = (currentDirection === "zh-to-en") ? "Chinese" : "English";
-        const tgt = (currentDirection === "zh-to-en") ? "English" : "Chinese";
-        if (diagDebug) diagDebug.textContent = `Swapping direction: Speak ${src} ➔ ${tgt} subtitles`;
+        setStatus("connecting", "Switching languages...");
+        const src = LANGUAGES[sourceLang]?.name || sourceLang;
+        const tgt = LANGUAGES[targetLang]?.name || targetLang;
+        if (diagDebug) diagDebug.textContent = `Swapping: Speak ${src} ➔ ${tgt} subtitles`;
         restartWebSocket();
       }
     }
 
     if (swapLangBtn) {
       swapLangBtn.onclick = handleSwap;
+    }
+
+    if (sourceLangSelect) {
+      sourceLangSelect.onchange = () => {
+        sourceLang = sourceLangSelect.value;
+        localStorage.setItem("subtitles_source_lang", sourceLang);
+        updateDirectionUI();
+        if (isRunning) {
+          finalizeCurrentParagraph();
+          restartWebSocket();
+        }
+      };
+    }
+
+    if (targetLangSelect) {
+      targetLangSelect.onchange = () => {
+        targetLang = targetLangSelect.value;
+        localStorage.setItem("subtitles_target_lang", targetLang);
+        updateDirectionUI();
+        if (isRunning) {
+          finalizeCurrentParagraph();
+          restartWebSocket();
+        }
+      };
     }
 
     function setStatus(dotClass, text) {
@@ -957,9 +1011,12 @@
     }
 
     function joinSentences(existing, incoming) {
+      const tgtMeta = LANGUAGES[targetLang] || { noSpace: false };
+      const isNoSpace = !!tgtMeta.noSpace;
+
       if (!existing) {
         incoming = incoming.trim();
-        if (currentDirection === "zh-to-en") {
+        if (!isNoSpace) {
           return incoming ? incoming.charAt(0).toUpperCase() + incoming.slice(1) : "";
         }
         return incoming;
@@ -969,12 +1026,12 @@
       if (!incoming) return existing;
 
       // Avoid exact suffix duplicate
-      if (existing.endsWith(incoming) || (currentDirection === "zh-to-en" && existing.toLowerCase().endsWith(incoming.toLowerCase()))) {
+      if (existing.endsWith(incoming) || (!isNoSpace && existing.toLowerCase().endsWith(incoming.toLowerCase()))) {
         return existing;
       }
 
-      if (currentDirection === "en-to-zh") {
-        // Target is Chinese: character and substring overlap detection
+      if (isNoSpace) {
+        // Target is non-spaced (Chinese, Burmese, Thai): character and substring overlap detection
         let maxOverlap = 0;
         const maxLen = Math.min(existing.length, incoming.length, 30);
         for (let len = maxLen; len > 0; len--) {
@@ -994,7 +1051,7 @@
         const needsSpace = /[a-zA-Z0-9]/.test(lastChar) && /[a-zA-Z0-9]/.test(firstChar);
         return existing + (needsSpace ? " " : "") + incoming;
       } else {
-        // Target is English: word-level overlap detection
+        // Target is spaced (English, German, Spanish, Portuguese, Arabic): word-level overlap detection
         const existWords = existing.split(/\s+/);
         const inWords = incoming.split(/\s+/);
         let maxOverlap = 0;
@@ -1012,8 +1069,8 @@
           if (!incoming) return existing;
         }
 
-        // Capitalize first letter if previous ended with terminal punctuation (. ? !)
-        if (/[.!?]\s*$/.test(existing)) {
+        // Capitalize first letter if previous ended with terminal punctuation (. ? ! or Chinese/Burmese equivalent)
+        if (/[.!?。！？။]\s*$/.test(existing)) {
           incoming = incoming.charAt(0).toUpperCase() + incoming.slice(1);
         }
 
@@ -1035,7 +1092,9 @@
       lastChunkTime = now;
 
       const currentText = currentParagraphEl ? (currentParagraphEl.getAttribute("data-text") || "") : "";
-      const endsWithTerminal = /[.!?。！？]\s*$/.test(currentText);
+      const endsWithTerminal = /[.!?。！？။]\s*$/.test(currentText);
+
+      const tgtMeta = LANGUAGES[targetLang] || {};
 
       // Start new paragraph if:
       // 1. No paragraph exists yet
@@ -1046,7 +1105,10 @@
           finalizeCurrentParagraph();
         }
         currentParagraphEl = document.createElement("div");
-        currentParagraphEl.className = "english-paragraph" + (currentDirection === "en-to-zh" ? " target-chinese" : "");
+        let paraClass = "english-paragraph";
+        if (tgtMeta.noSpace) paraClass += " target-chinese";
+        if (tgtMeta.rtl) paraClass += " rtl-text";
+        currentParagraphEl.className = paraClass;
         currentParagraphEl.setAttribute("data-text", "");
         sentenceCountInParagraph = 0;
         englishBody.appendChild(currentParagraphEl);
@@ -1057,7 +1119,7 @@
       currentParagraphEl.setAttribute("data-text", joined);
 
       // Count complete sentences
-      const sentences = joined.match(/[.!?。！？](\s|$)/g);
+      const sentences = joined.match(/[.!?。！？။](\s|$)/g);
       sentenceCountInParagraph = sentences ? sentences.length : 0;
 
       // Render flowing paragraph
@@ -1298,8 +1360,8 @@
       ws.onopen = () => {
         console.log("[Live API] WebSocket open");
         setStatus("active", "Listening to room...");
-        const src = (currentDirection === "zh-to-en") ? "Chinese" : "English";
-        const tgt = (currentDirection === "zh-to-en") ? "English" : "Chinese";
+        const src = LANGUAGES[sourceLang]?.name || sourceLang;
+        const tgt = LANGUAGES[targetLang]?.name || targetLang;
         if (diagDebug) diagDebug.textContent = `WebSocket connected! Speak ${src} for ${tgt} subtitles...`;
 
         // Setup message for gemini-3.5-live-translate-preview
@@ -1354,8 +1416,8 @@
           if (data.setupComplete || data.setup_complete) {
             console.log("Setup complete! Live session ready.");
             setStatus("active", "Listening to room...");
-            const src = (currentDirection === "zh-to-en") ? "Chinese" : "English";
-            const tgt = (currentDirection === "zh-to-en") ? "English" : "Chinese";
+            const src = LANGUAGES[sourceLang]?.name || sourceLang;
+            const tgt = LANGUAGES[targetLang]?.name || targetLang;
             if (diagDebug) diagDebug.textContent = `Live ready! Speak ${src} to see ${tgt} subtitles.`;
             return;
           }
